@@ -1,26 +1,25 @@
 package ws.chill.gamecheckout.analytics
 
-import android.util.Log
+import com.adobe.marketing.mobile.Edge
+import com.adobe.marketing.mobile.ExperienceEvent
 
 /**
- * Analytics is deliberately **not** ported from iOS.
+ * Port of `Analytics/Tracker.swift` — same events, same XDM field names, sent
+ * through Adobe Experience Platform Edge Network.
  *
- * The iOS app sends Adobe Experience Platform Edge events (`Analytics/Tracker.swift`,
- * edgeConfigId `e8922806-0c73-4c26-a4f8-f102f34c9af6`), but that app's own README
- * lists analytics as out of scope: "Not included (by design, for this first pass)".
- *
- * This object exists so every tracking call site in this port mirrors its Swift
- * counterpart one-for-one. To turn tracking on, add the AEP Edge + Edge Identity
- * Android SDKs (`com.adobe.marketing.mobile:sdk-bom`, `:edge`, `:edgeidentity`,
- * `:core`), register `Edge.EXTENSION` and `EdgeIdentity.EXTENSION`, configure the
- * datastream id, and implement the `send` calls below with the same XDM payloads
- * the Swift `Tracker` builds.
+ * Events leave the device via the Edge extension, so [init] must have run: the
+ * extension is registered and pointed at [EDGE_CONFIG_ID] by `GameCheckoutApp`.
+ * Sending before that completes is not an error, but the event will not reach
+ * the Edge Network.
  */
 object Tracker {
 
+    /**
+     * Same Adobe Experience Platform edge configuration (datastream) the web
+     * app's Alloy instance and the iOS app use. Not sensitive — it is already
+     * embedded in the public web bundle.
+     */
     const val EDGE_CONFIG_ID = "e8922806-0c73-4c26-a4f8-f102f34c9af6"
-
-    private const val TAG = "GameCheckout/Analytics"
 
     /**
      * Stands in for iOS's `Bundle.main.bundleIdentifier` — the app identity
@@ -28,13 +27,25 @@ object Tracker {
      */
     const val APP_IDENTIFIER = "ws.chill.gamecheckout"
 
-    var enabled: Boolean = false
+    /**
+     * Set once the SDK has finished registering its extensions. Events raised
+     * before that are dropped rather than queued, matching the iOS behaviour
+     * where `Tracker.trackAppLaunch()` runs from the registration callback.
+     */
+    @Volatile
+    var ready: Boolean = false
+        private set
 
-    fun trackAppLaunch() = send("application.launches") {
-        mapOf("application" to mapOf("launches" to mapOf("value" to 1)))
+    /** Called from the extension-registration callback in `GameCheckoutApp`. */
+    internal fun markReady() {
+        ready = true
     }
 
-    fun trackPageView(name: String) = send("web.webPageDetails") {
+    fun trackAppLaunch() = send(
+        mapOf("application" to mapOf("launches" to mapOf("value" to 1))),
+    )
+
+    fun trackPageView(name: String) = send(
         mapOf(
             "web" to mapOf(
                 "webPageDetails" to mapOf(
@@ -44,14 +55,14 @@ object Tracker {
                     "server" to APP_IDENTIFIER,
                 ),
             ),
-        )
-    }
+        ),
+    )
 
-    fun trackViewed(game: String) = send("viewed") {
-        mapOf("_mobiledx" to mapOf("viewed" to 1, "gameName" to game))
-    }
+    fun trackViewed(game: String) = send(
+        mapOf("_mobiledx" to mapOf("viewed" to 1, "gameName" to game)),
+    )
 
-    fun trackBorrowed(game: String, name: String, email: String) = send("borrowed") {
+    fun trackBorrowed(game: String, name: String, email: String) = send(
         mapOf(
             "_mobiledx" to mapOf(
                 "borrowed" to 1,
@@ -59,10 +70,10 @@ object Tracker {
                 "borrowerName" to name,
                 "borrowerEmail" to email,
             ),
-        )
-    }
+        ),
+    )
 
-    fun trackReturned(game: String, name: String, email: String) = send("returned") {
+    fun trackReturned(game: String, name: String, email: String) = send(
         mapOf(
             "_mobiledx" to mapOf(
                 "returned" to 1,
@@ -70,11 +81,16 @@ object Tracker {
                 "borrowerName" to name,
                 "borrowerEmail" to email,
             ),
-        )
-    }
+        ),
+    )
 
-    private inline fun send(event: String, xdm: () -> Map<String, Any>) {
-        if (!enabled) return
-        Log.d(TAG, "sendEvent $event xdm=${xdm()}")
+    private fun send(xdm: Map<String, Any>) {
+        if (!ready) return
+        val event = ExperienceEvent.Builder()
+            .setXdmSchema(xdm)
+            .build()
+        // Null callback: this app does not consume the Edge Network response,
+        // matching the iOS `Edge.sendEvent(experienceEvent:)` with no completion.
+        Edge.sendEvent(event, null)
     }
 }

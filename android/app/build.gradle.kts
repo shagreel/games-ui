@@ -123,6 +123,12 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // Adobe Experience Platform Edge Network — mirrors the iOS app's AEP Edge setup.
+    implementation(platform(libs.aep.sdk.bom))
+    implementation(libs.aep.core)
+    implementation(libs.aep.edge)
+    implementation(libs.aep.edgeidentity)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 

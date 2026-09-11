@@ -9,6 +9,7 @@ navigationCompose = "2.8.5"
 okhttp = "4.12.0"
 serializationJson = "1.7.3"
 coil = "3.0.4"
+aepSdkBom = "3.13.0"
 junit = "4.13.2"
 androidxJunit = "1.2.1"
 espresso = "3.6.1"
@@ -33,6 +34,13 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serializationJson" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+
+# Adobe Experience Platform Edge Network. The BOM supplies the extension
+# versions: core 3.4.1, edge 3.0.2, edgeidentity 3.0.1 as of BOM 3.13.0.
+aep-sdk-bom = { group = "com.adobe.marketing.mobile", name = "sdk-bom", version.ref = "aepSdkBom" }
+aep-core = { group = "com.adobe.marketing.mobile", name = "core" }
+aep-edge = { group = "com.adobe.marketing.mobile", name = "edge" }
+aep-edgeidentity = { group = "com.adobe.marketing.mobile", name = "edgeidentity" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }

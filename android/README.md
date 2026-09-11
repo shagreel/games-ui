@@ -28,14 +28,35 @@ declaration names the Swift file it came from.
 | Pull to refresh | `.refreshable` | `PullToRefreshBox` |
 | Admin screen | reuses the already-loaded list, no second fetch | one shared `GameListViewModel` |
 
+## Analytics
+
+Ported. `analytics/Tracker.kt` mirrors `Analytics/Tracker.swift` one-for-one —
+same event names, same XDM field names — and sends through Adobe Experience
+Platform Edge Network to the same datastream the iOS app and web app use
+(`edge.configId = e8922806-0c73-4c26-a4f8-f102f34c9af6`).
+
+`GameCheckoutApp` registers `Edge` and `Edge Identity` from the AEP SDK
+(`com.adobe.marketing.mobile:sdk-bom`), sets that datastream id, then fires the
+launch event from the registration callback.
+
+Two details worth knowing before changing this:
+
+- **No `Consent` extension is registered**, deliberately — matching iOS. Edge
+  then logs `Collect consent is pending, suspending the Edge queue` followed by
+  `Consent extension is not registered yet, using default collect status (yes)`
+  and resumes the queue. That warning pair is expected, not a fault. Add
+  `edgeconsent` and call `Consent.update` only if per-user consent must be
+  honoured.
+- **`Tracker.ready` gates every event.** Events raised before registration
+  finishes are dropped rather than queued, which is why the SDK is wired up in
+  `Application.onCreate` before any UI exists.
+
+Events are sent for real — a debug build running against this datastream puts
+real analytics into the production dataset. Point `EDGE_CONFIG_ID` at a
+development datastream if that matters, or gate `send` on a build flag.
+
 ## What is deliberately different
 
-- **Analytics.** The iOS app ships Adobe Experience Platform Edge tracking
-  (`Analytics/Tracker.swift`), even though its README lists analytics as out of
-  scope. This port omits it. Every call site still exists in
-  `analytics/Tracker.kt` with the identical event names and XDM payloads, so
-  turning it on later means adding the AEP dependencies and implementing `send`,
-  not hunting for call sites. See the comment in that file.
 - **The mailto link.** SwiftUI's `Link(mailto:)` is an `ACTION_SENDTO` intent;
   when no mail client is installed the tap is a no-op (iOS falls back to a plain
   label in that case).
@@ -198,7 +219,7 @@ and defaults `GRADLE_USER_HOME` to `.gradle-home/` inside the project.
 app/src/main/java/ws/chill/gamecheckout/
 ├── GameCheckoutApp.kt        GameCheckoutApp.swift — dependency graph + launch hook
 ├── MainActivity.kt           GameCheckoutApp.body — login gate, then nav host
-├── analytics/Tracker.kt      Analytics/Tracker.swift (call sites only; see above)
+├── analytics/Tracker.kt      Analytics/Tracker.swift — same events via AEP Edge
 ├── auth/
 │   ├── AuthManager.kt        Auth/AuthManager.swift — hash, validate, session expiry
 │   ├── AuthSession.kt        the slice of auth the network layer needs
