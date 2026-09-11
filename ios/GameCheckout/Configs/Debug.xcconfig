@@ -1,0 +1,4 @@
+// Point this at your games-checkout backend (the same value used for
+// REACT_APP_API_ENDPOINT in the web app's .env). The $() bits below are a
+// required xcconfig escape for "//" — do not remove them.
+API_BASE_URL = https:/$()/api.chill.ws

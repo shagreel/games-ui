@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# Gradle launcher for this project.
+#
+# Most projects ship a gradle-wrapper.jar next to this script. This one does not,
+# so the launcher finds a Gradle 8.13+ installation in the usual places instead:
+#
+#   1. $GRADLE_HOME/bin/gradle          (explicit override)
+#   2. a gradle distribution already in the wrapper cache
+#   3. `gradle` on $PATH
+#
+# Usage is identical to a normal wrapper: ./gradlew assembleDebug
+#
+set -e
+
+DIR=$(cd "$(dirname "$0")" && pwd)
+GRADLE_VERSION=8.13
+
+find_gradle() {
+    if [ -n "$GRADLE_HOME" ] && [ -x "$GRADLE_HOME/bin/gradle" ]; then
+        echo "$GRADLE_HOME/bin/gradle"
+        return 0
+    fi
+
+    # Wrapper cache: ~/.gradle/wrapper/dists/gradle-<version>-bin/*/gradle-<version>/bin/gradle
+    for candidate in \
+        "$HOME"/.gradle/wrapper/dists/gradle-"$GRADLE_VERSION"-bin/*/gradle-"$GRADLE_VERSION"/bin/gradle \
+        "$GRADLE_USER_HOME"/wrapper/dists/gradle-"$GRADLE_VERSION"-bin/*/gradle-"$GRADLE_VERSION"/bin/gradle
+    do
+        if [ -x "$candidate" ]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    if command -v gradle >/dev/null 2>&1; then
+        command -v gradle
+        return 0
+    fi
+
+    return 1
+}
+
+GRADLE=$(find_gradle) || {
+    echo "error: no Gradle $GRADLE_VERSION+ installation found." >&2
+    echo "Install one (brew install gradle) or set GRADLE_HOME." >&2
+    exit 1
+}
+
+# Default the Gradle user home into the project so a sandboxed or locked-down
+# environment can still resolve dependencies. Override by exporting GRADLE_USER_HOME.
+if [ -z "$GRADLE_USER_HOME" ]; then
+    GRADLE_USER_HOME="$DIR/.gradle-home"
+    export GRADLE_USER_HOME
+fi
+
+exec "$GRADLE" "$@"
