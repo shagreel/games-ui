@@ -1,7 +1,6 @@
 # Deployment authentication validation
 
-
-awesome-sites has its own auth system. It sets a GWT token in the `awesome_auth_token` cookie. If I move the site to be an awesome site, the games backend will need to authenticate against their system rather than using the current hashed shared auth token.
+awesome-sites has its own auth system. https://github.com/Adobe-DesignTechnology/awesome-api It sets a GWT token in the `awesome_auth_token` cookie. If I move the site to be an awesome site, the games backend will need to authenticate against their system rather than using the current hashed shared auth token.
 
 ## Validate a session
 
@@ -9,7 +8,6 @@ awesome-sites has its own auth system. It sets a GWT token in the `awesome_auth_
 curl --silent --show-error --include \
   --cookie "awesome_auth_token=$TOKEN" \
   'https://<site-plug>.awesome-sites.corp.adobe.com/_auth/api/webapp/session'The endpoint validates the token for this specific deployed webapp. The
-
 ```
 
 | Response                                    | Meaning                                              |
@@ -29,6 +27,4 @@ If the cookie value is exposed, revoke it and sign in again:
 curl --silent --show-error --include \
   --cookie "awesome_auth_token=$TOKEN" \
   'https://analytics-coworker-enablement.awesome-sites.corp.adobe.com/_auth/api/webapp/logout'
-
-
 ```

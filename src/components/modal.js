@@ -2,10 +2,40 @@ import {useContext, useEffect, useState} from 'react';
 import Cookies from "js-cookie";
 import {Tracker, WebSdkContext} from "../WebSdkContext";
 
+const BORROWER_NAME_KEY = 'games-ui.borrower-name';
+const BORROWER_EMAIL_KEY = 'games-ui.borrower-email';
+
+const getStoredValue = (key) => {
+    try {
+        return window.localStorage.getItem(key) || '';
+    } catch (error) {
+        console.error(`Could not read ${key} from local storage`, error);
+        return '';
+    }
+};
+
+const storeValue = (key, value) => {
+    try {
+        window.localStorage.setItem(key, value);
+    } catch (error) {
+        console.error(`Could not save ${key} to local storage`, error);
+    }
+};
+
 export const InteractionModal = (props) => {
     const alloy = useContext(WebSdkContext);
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [name, setName] = useState(() => getStoredValue(BORROWER_NAME_KEY));
+    const [email, setEmail] = useState(() => getStoredValue(BORROWER_EMAIL_KEY));
+
+    const updateName = (value) => {
+        setName(value);
+        storeValue(BORROWER_NAME_KEY, value);
+    };
+
+    const updateEmail = (value) => {
+        setEmail(value);
+        storeValue(BORROWER_EMAIL_KEY, value);
+    };
 
     const borrowGame = async () => {
         await fetch(`${process.env.REACT_APP_API_ENDPOINT}/games/borrow`, {
@@ -81,11 +111,11 @@ export const InteractionModal = (props) => {
                     <div>
                         <div className="modal-form-input">
                             <div><label htmlFor="nameId">Full Name: </label></div>
-                            <div><input type="text" id="nameId" placeholder="Full Name" autofocus="autofocus" onInput={e => setName(e.target.value)}/></div>
+                            <div><input type="text" id="nameId" placeholder="Full Name" autoFocus value={name} onChange={e => updateName(e.target.value)}/></div>
                         </div>
                         <div className="modal-form-input">
                             <div><label htmlFor="emailId">Email: </label></div>
-                            <div><input type="email" id="emailId" placeholder="meeple@adobe.com" onInput={e => setEmail(e.target.value)}/></div>
+                            <div><input type="email" id="emailId" placeholder="meeple@adobe.com" value={email} onChange={e => updateEmail(e.target.value)}/></div>
                         </div>
                     </div>
                 )}
