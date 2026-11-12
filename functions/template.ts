@@ -1,60 +1,59 @@
-export function getTemplate({
-                                redirectPath,
-                                withError
-                            }: {
-    redirectPath: string;
-    withError: boolean;
-}): string {
-    return `
-  <!doctype html>
-  <html lang="en" data-theme="dark">
+const NEW_SITE_URL = 'https://bglehi.adobe.com/';
+const REDIRECT_SECONDS = 5;
 
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Game Checkout Login</title>
-      <meta name="description" content="This site is password protected.">
-
-      <link rel="stylesheet" href="/pico.min.css">
-
-      <style>
-        body > main {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          min-height: calc(100vh - 7rem);
-          padding: 1rem 0;
-          max-width: 600px;
-        }
-
-        .error {
-          background: white;
-          border-radius: 10px;
-          color: var(--del-color);
-          padding: 0.5em 1em;
-        }
-
-        h2 { color: var(--color-h2); }
-      </style>
-    </head>
-
-    <body>
-      <main>
-        <article>
-          <hgroup>
-            <h1>Password</h1>
-            <h2>Please enter your password for this site.</h2>
-          </hgroup>
-          ${withError ? `<p class="error">Incorrect password, please try again.</p>` : ''}
-          <form method="post" action="/cfp_login">
-            <input type="hidden" name="redirect" value="${redirectPath}" />
-            <input type="password" name="password" placeholder="Password" aria-label="Password" autocomplete="current-password" required autofocus>
-            <button type="submit" class="contrast">Login</button>
-          </form>
-        </article>
-      </main>
-    </body>
-
-  </html>
-  `;
+export function getTemplate(): string {
+    return `<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="refresh" content="${REDIRECT_SECONDS};url=${NEW_SITE_URL}">
+    <meta name="robots" content="noindex">
+    <title>The game checkout site has moved</title>
+    <meta name="description" content="The game checkout site has moved to ${NEW_SITE_URL}">
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #11191f;
+        color: #e8eef2;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        text-align: center;
+        padding: 1.5rem;
+        box-sizing: border-box;
+      }
+      main { max-width: 34rem; }
+      h1 { font-size: 1.7rem; margin: 0 0 1rem; line-height: 1.25; }
+      p { font-size: 1.05rem; line-height: 1.6; margin: 0.5rem 0; color: #b9c6cf; }
+      a { color: #7cc4ff; }
+      .cta {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.65rem 1.25rem;
+        border-radius: 8px;
+        background: #2b6cb0;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>This game checkout site has moved</h1>
+      <p>Checkout now lives at <a href="${NEW_SITE_URL}">${NEW_SITE_URL}</a>.</p>
+      <p>You'll be redirected automatically in ${REDIRECT_SECONDS} seconds.</p>
+      <a class="cta" href="${NEW_SITE_URL}">Go there now</a>
+    </main>
+    <script>
+      setTimeout(function () {
+        window.location.replace('${NEW_SITE_URL}');
+      }, ${REDIRECT_SECONDS * 1000});
+    </script>
+  </body>
+</html>`;
 }
